@@ -1,0 +1,211 @@
+#!/bin/bash
+
+#infile=$2
+
+#Function that calculates the dimensions of a matrix
+dims()
+{
+    #echo "Start of dims function."
+    #global variable to hold size of columns
+    colSize=0
+
+    #global variable to hold size of columns
+    rowSize=0
+
+    #global variable to hold total elements
+    totalElem=0
+
+    #lots of syntax taken from bigloops example
+    while read myLine
+    do
+        #this will give us the rows. Increment each time we read a line (row)
+        ((rowSize++))
+
+        for i in $myLine
+        do
+        #This loops through each num, which ends up being
+        #the total number of elements
+            ((totalElem++))
+        done
+
+    done < $infile
+
+    #divide total elements by rows to get columns
+    colSize=$(($totalElem / $rowSize))
+
+    echo -e $rowSize $colSize
+    #echo "End of dims function."
+}
+
+transpose()
+{
+    #global variable to hold size of columns
+    colSizeT=0
+
+    #global variable to hold size of columns
+    rowSizeT=0
+
+    #global variable to hold total elements
+    totalElemT=0
+
+    #lots of syntax taken from bigloops example
+    while read myLine
+    do
+        #this will give us the rows. Increment each time we read a line (row)
+        ((rowSizeT++))
+
+        for i in $myLine
+        do
+        #This loops through each num, which ends up being
+        #the total number of elements
+            ((totalElemT++))
+        done
+
+    done < $infile
+
+    #divide total elements by rows to get columns
+    colSizeT=$(($totalElemT / $rowSizeT))
+    #echo "Start of transpose function."
+    #just wanted to see if I could acesss other variables
+    #echo -e $rowSizeT $colSizeT
+    count=1
+    while [[ $count -le $colSizeT ]]
+    do
+        #echo -e "Inside while loop. Currently loop $count"
+        cut -f$count $infile | paste -s
+        ((count++))
+    done
+
+    #cat "$infile"
+    #echo "End of transpose function."
+}
+
+mean()
+{
+#global variable to hold size of columns
+colSize=0
+#global variable to hold size of columns
+rowSize=0
+
+#global variable to hold total elements
+totalElem=0
+
+#lots of syntax taken from bigloops example
+while read myLine
+do
+    #this will give us the rows. Increment each time we read a line (row)
+    ((rowSize++))
+
+    for i in $myLine
+    do
+    #This loops through each num, which ends up being
+    #the total number of elements
+        ((totalElem++))
+    done
+
+done < $infile
+
+    #divide total elements by rows to get columns
+colSize=$(($totalElem / $rowSize))
+
+#echo -e $rowSize $colSize
+
+#looks like 1 gets first column, 2 gets 2nd, and so on
+#cut -f1 $inputFile > $tempCol
+count=1
+tempSum=0
+mean=0
+while [[ $count -le $colSize ]]
+do
+    #echo "Inside first loop"
+    #i=0
+    #loop through input file, grab items in the first column
+    #and paste into temp file to be accessed individually
+    cut -f$count $infile > tempFileC
+
+    #item1 and item2 grab the values in the tempFile 
+    #which will be in the format num1   num2
+    # while read item1
+    # do
+    #     echo "Inside second loop"
+    #     echo -e "Contents of tempFileC: $item1" #debugging
+    #     cat -A tempFileC
+    #     #sum up the columns
+    #     tempSum=$(($tempSum + $item1))
+    #     #echo "Sum: $tempSum"
+    #     #echo "$tempSum" >> tempFileD
+    #     #((i++))
+    # done < tempFileC
+    #cat -A tempFileC
+    while read num
+    do
+        tempSum=$(($tempSum + $num))
+    done < tempFileC
+    ((count++))
+    mean=$(( (tempSum + (rowSize/2)*( (tempSum>0)*2-1 )) / rowSize))
+    echo "$mean" >> tempFileD
+    #needed to reset these vars cus they were getting added.
+    #hacky I know but running out of time
+    tempSum=0
+    mean=0
+    #trailing tab for some reason! in the end file
+    #cat tempFileD | tr '\n' '\t' > tempFileE   this was adding an extra tab
+done
+cat tempFileD | tr 'n' ' ' | paste -s > tempFileE
+#add newline
+#echo >> "tempFileE"
+#check results
+#cat -A tempFileE
+cat tempFileE
+rm tempFileE tempFileD tempFileC
+}
+
+
+
+#Testing
+if [ $1 = "dims" ] || [ $1 = "mean" ] || [ $1 = "transpose" ]
+    then
+
+
+    if (("$#" > 2 ))
+    then
+        echo "Invalid number of arguments" 1>&2
+        exit 1
+    fi
+
+    if [ $# -gt 1 ]
+    then
+        infile=$2
+    fi
+
+    if [ $# -eq 1 ]
+    then
+        infile=tmp
+        cat > $infile
+        #echo "Cat has finished"
+    fi
+
+    if [ ! -f $2 ]
+    then
+        echo "Filename $2 does not exist" 1>&2        #Redirects stdout to stderr 1>&2
+        exit 1
+    fi
+
+    if [ $1 = "dims" ]
+    then
+        dims $infile
+    fi
+
+    if [ $1 = "mean" ]
+    then
+	    mean $infile
+    fi
+
+    if [ $1 = "transpose" ]
+    then
+        transpose $infile
+    fi
+else 
+    echo "Invalid command" 1>&2
+    exit 1
+fi
