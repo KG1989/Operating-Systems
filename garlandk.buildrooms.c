@@ -30,7 +30,9 @@ bool CanAddConnectionFrom(struct room *room1);
 bool ConnectionAlreadyExists(struct room *room1, struct room *room2);
 void ConnectRoom(struct room *room1, struct room *room2); 
 bool IsSameRoom(struct room *room1, struct room *room2);
-//void init(struct room *room[], char *roomType[]);
+//char *randomRoomName(char *rooms[]);
+void init(struct room *room[], char *roomType[], char *roomName[]);
+void ShuffleRoomNames(char ** possibleRoomNames);
 
 
 
@@ -53,6 +55,7 @@ int main()
 {   //create directory with onid name and pid
     int i, j;
     char dirName[40];
+    srand(time(NULL));
     memset(dirName, '\0', 40);
     sprintf(dirName, "garlandk.rooms.%d", getpid());
     mkdir(dirName, 0755);
@@ -64,14 +67,18 @@ int main()
     //array of room pointers to hold all 7 rooms
 
     //roomArray is 7 rooms out of 10 chosen at random
-    struct room roomArray[7];
-    //randomly assign 7 of these 10 rooms
-
-    //init(roomNames, roomType);
-
-    while(IsGraphFull(roomNames) == 0)
+    struct room *roomArray[7];
+    for (j = 0; j < 6; j++)
     {
-        AddRandomConnection(roomNames);
+        roomArray[j] = malloc (sizeof(struct room));
+    }
+    //randomly assign 7 of these 10 rooms
+    ShuffleRoomNames(roomNames);
+    init(roomArray, roomType, roomNames);
+
+    while(IsGraphFull(roomArray) == false)
+    {
+        AddRandomConnection(roomArray);
     }
 
     chdir(dirName);
@@ -86,7 +93,6 @@ int main()
     
 
     //generate 7 different room files
-
 
     //
     return 0;
@@ -122,7 +128,7 @@ void AddRandomConnection(struct room *room[])
     A = GetRandomRoom(room);
 
     if (CanAddConnectionFrom(A) == true)
-      break;
+        break;
   }
 
   do
@@ -149,17 +155,22 @@ bool CanAddConnectionFrom(struct room *room)
     {
         return true;
     }
-    return false;
+    else
+    {
+        return false;
+    }
 }
 // Returns true if a connection from Room x to Room y already exists, false otherwise
 bool ConnectionAlreadyExists(struct room *room1, struct room *room2)
 {
-    int index;
-    //loop through all possible room ronnections
-    for (index = 0; index < 6; index++)
-    {   
-        //if the current room connection is the same as the second room, return true
-        if (strcmp(room1->outboundConnections[index]->name, room2->name) == 0)
+    int i;
+    for(i = 0; i < 6; i++)
+    {
+        if (room1->outboundConnections[i] == NULL)
+        {
+            return false;
+        }
+        else if (strcmp(room2->name, room1->outboundConnections[i]->name) == 0)
         {
             return true;
         }
@@ -185,18 +196,22 @@ bool IsSameRoom(struct room *room1, struct room *room2)
     {
         return true;
     }
-    return false;
+    else
+    {
+        return false;
+    }
 }
 
-struct room *randomRoom(struct room *rooms[])
+/*
+char *randomRoomName(char *rooms[])
 {
     int found = 1;
-    int alreadyseen[10];
-    memset(alreadyseen, 0, 10);
+    int i;
+    int alreadyseen[7] = {0,0,0,0,0,0,0};
 
     while(found)
     {
-        int i = rand() % 10; //random integer from 0 to 10
+        i = rand() % 10; //random integer from 0 to 10
         if (alreadyseen[i] == 0)
         {
             found = 0;
@@ -204,29 +219,44 @@ struct room *randomRoom(struct room *rooms[])
             return rooms[i];
         }
     }
+}*/
+
+
+void ShuffleRoomNames(char ** possibleRoomNames)
+{
+    int i, j;
+    char * temp;
+
+    for(i = 10 - 1; i > 0; i--){
+        j = rand() % (i+1);
+        temp = possibleRoomNames[i];
+        possibleRoomNames[i] = possibleRoomNames[j];
+        possibleRoomNames[j] = temp;
+    }
 }
-/*
-void init(struct room *room[], char *roomType[])
+
+void init(struct room *rooms[], char *roomType[], char *roomName[])
 {
     int i;
     for (i = 0; i < 6; i++)
     {
-        room[i]->name = randomRoom(room);
+        //rooms[i] = malloc(sizeof(struct room));
+        rooms[i]->name = roomName[i];
 
         if (i == 0)
         {
             //roomType[0] = START_ROOM
-            room[i]->roomType = roomType[0];
+            rooms[i]->roomType = roomType[0];
         }
         else if (i == 6)
         {
             //roomType[1] = END_ROOM
-            room[i]->roomType = roomType[1];
+            rooms[i]->roomType = roomType[1];
         }
         else
         {
             //roomType[2] = MID_ROOM
-            room[i]->roomType = roomType[2];
+            rooms[i]->roomType = roomType[2];
         }
     }
-}*/
+}
