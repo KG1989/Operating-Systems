@@ -53,7 +53,8 @@ void ShuffleRoomNames(char ** possibleRoomNames);
 
 int main()
 {   //create directory with onid name and pid
-    int i, j;
+    int i, j, k;
+    int count;
     char dirName[40];
     srand(time(NULL));
     memset(dirName, '\0', 40);
@@ -68,7 +69,7 @@ int main()
 
     //roomArray is 7 rooms out of 10 chosen at random
     struct room *roomArray[7];
-    for (j = 0; j < 6; j++)
+    for (j = 0; j < 7; j++)
     {
         roomArray[j] = malloc (sizeof(struct room));
     }
@@ -81,6 +82,18 @@ int main()
         AddRandomConnection(roomArray);
     }
 
+    /* debugging print statement
+    for(count = 0; count < 7; count++)
+    {
+        printf("Room %d\nnumConnections: %d\nroomName: %s\nroomType: %s\n", count, roomArray[count]->numOutboundConnections, roomArray[count]->name, roomArray[count]->roomType);
+    }
+    for(count = 0; count < roomArray[0]->numOutboundConnections; count++)
+    {
+        printf("%d Room Connections\n", count);
+        printf("Connection %d: %s\n", count+1, roomArray[0]->outboundConnections[count]->name);
+    }*/
+
+
     chdir(dirName);
     for (i = 0; i < 7; i++)
     {
@@ -88,6 +101,20 @@ int main()
         sprintf(roomFileName, "%s_room", roomNames[i]);
         FILE *infile = fopen(roomFileName, "w+");
         //fprintf(infile, "%s_room", roomNames[i]);
+
+        FILE *f = fopen(roomFileName, "w");
+        if (f == NULL)
+        {
+            printf("Error opening file!\n");
+            exit(1);
+        }
+
+        /* print the name, connections, and type */
+        fprintf(f, "ROOM NAME: %s\n", roomArray[i]->name);
+        for(k = 0; k < roomArray[i]->numOutboundConnections; k++){
+            fprintf(f, "CONNECTION %d: %s\n", k+1, roomArray[i]->outboundConnections[k]->name);
+        }
+        fprintf(f, "ROOM TYPE: %s\n", roomArray[i]->roomType);
         fclose(infile);
     }   
     
@@ -105,7 +132,7 @@ bool IsGraphFull(struct room *room[])
 {
     int index;
     //7 rooms max, starting at index 0
-    for (index = 0; index < 6; index++)
+    for (index = 0; index < 7; index++)
     {
         //checking array of outbound connections for each room
         if (room[index]->numOutboundConnections < 3)
@@ -138,7 +165,8 @@ void AddRandomConnection(struct room *room[])
   while(CanAddConnectionFrom(B) == false || IsSameRoom(A, B) == true || ConnectionAlreadyExists(A, B) == true);
 
   ConnectRoom(A, B);  // TODO: Add this connection to the real variables, 
-  ConnectRoom(B, A);  //  because this A and B will be destroyed when this function terminates
+  //commented this out because I was getting a double connection. They were being added twice
+  //ConnectRoom(B, A);  //  because this A and B will be destroyed when this function terminates
 }
 
 // Returns a random Room, does NOT validate if connection can be added
@@ -181,6 +209,8 @@ bool ConnectionAlreadyExists(struct room *room1, struct room *room2)
 // Connects Rooms x and y together, does not check if this connection is valid
 void ConnectRoom(struct room *room1, struct room *room2) 
 {
+    
+    //add each connection
     room1->outboundConnections[room1->numOutboundConnections] = room2;
     room1->numOutboundConnections++;
 
@@ -221,7 +251,7 @@ char *randomRoomName(char *rooms[])
     }
 }*/
 
-
+//https://stackoverflow.com/questions/6127503/shuffle-array-in-c
 void ShuffleRoomNames(char ** possibleRoomNames)
 {
     int i, j;
@@ -238,7 +268,7 @@ void ShuffleRoomNames(char ** possibleRoomNames)
 void init(struct room *rooms[], char *roomType[], char *roomName[])
 {
     int i;
-    for (i = 0; i < 6; i++)
+    for (i = 0; i < 7; i++)
     {
         //rooms[i] = malloc(sizeof(struct room));
         rooms[i]->name = roomName[i];
@@ -251,12 +281,12 @@ void init(struct room *rooms[], char *roomType[], char *roomName[])
         else if (i == 6)
         {
             //roomType[1] = END_ROOM
-            rooms[i]->roomType = roomType[1];
+            rooms[i]->roomType = roomType[2];
         }
         else
         {
             //roomType[2] = MID_ROOM
-            rooms[i]->roomType = roomType[2];
+            rooms[i]->roomType = roomType[1];
         }
     }
 }
