@@ -1,0 +1,4 @@
+This program is a simple shell program with basic commands such as cd, status, and exit. The shell will also run most linux commands from exec such as ls, pwd, cat, to name a few. The shell allows for redirection using the > and < operators as well. Play around and have some fun!
+
+To compile the shell program you just need to enter gcc -o smallsh smallsh.c
+then run using ./smallsh
